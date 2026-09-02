@@ -38,6 +38,19 @@
       radial-gradient(100% 100% at 50% 46%, transparent 44%, rgba(0,0,0,.66) 100%);
   }
   .frame.hit{animation:hit .5s cubic-bezier(.2,.8,.3,1)}
+  /* COVERED - the take kept for "Whence is that knocking?" clips the word
+     "knocking" itself. The knock sound lands where the word should be and the
+     line shudders with it, so the ear and the eye both get the beat and the
+     missing syllable goes by unnoticed. */
+  .plate.struck .line{animation:shudder .66s cubic-bezier(.2,.8,.3,1) .5s both}
+  @keyframes shudder{
+    0%{transform:translate(0,0)}
+    12%{transform:translate(-.07em,.025em)}
+    30%{transform:translate(.055em,-.02em)}
+    50%{transform:translate(-.035em,.012em)}
+    72%{transform:translate(.02em,0)}
+    100%{transform:translate(0,0)}
+  }
   @keyframes hit{
     0%{transform:translate(0,0)}
     14%{transform:translate(-7px,3px)}
@@ -413,7 +426,7 @@
 // a phone. the webm is kept beside it for anything that would rather have it.
 const BAKED_AUDIO = "dagger.mp3";
 const BAKED_AUDIO_ALT = "dagger.webm";
-const BAKED_TIMES = [1.09, 5.57, 9.72, 14.34, 18.445, 23.23, 28.16, 32.82, 37.55, 41.73, 45.11, 48.55, 51.86, 55.843, 60.89, 65.66, 68.57, 70.87, 73.95, 76.95, 79.65, 83.83, 86.13, 88.55, 92.71, 96.5, 101.76, 106.5, 109.52, 112.46, 117.4, 121.44, 125.25, 128.3, 131.89, 137.97, 140.14, 144.22, 148.24, 153.3, 158.39, 161.5, 163.545, 167.42, 169.9, 170.834, 173.95, 177.94, 180.39, 182.88, 186.76, 189.75, 193.07, 196.16, 199.19, 200.87, 204.4, 206.55, 208.63, 213.92, 215.81, 217.759, 222.09, 225.89, 227.57, 228.71, 230.05, 231.161, 233.13, 234.15, 236.57, 238.44, 240.92, 244.68, 247.79, 249.44, 253.71, 256.57, 258.85, 261.32, 264.81, 269.13, 272.99, 276.79, 279.88, 284.51, 288.26, 290.93, 293.85, 298.8, 302.7, 307.32, 311.95, 317.29, 321.77, 324.99, 326.73, 331.33, 336.66, 343.17, 347.93, 352.2, 356, 358.34, 362.86, 366.76, 370.94, 373.18, 375.85, 379.32, 381.88, 384.78, 389.82, 394.01, 397.17, 398.79, 402.48, 405.41, 407.22, 410.99, 414.8, 419.31, 423.13, 425.93, 429.21, 432.16, 435, 437.59, 441.53, 443.35, 445.16, 448.5, 451.54, 453.55, 454.99, 457.6, 459.09, 461.38, 464.6, 466.63, 468.19, 470.78, 475.52, 477.13, 479.3, 483.128];
+const BAKED_TIMES = [1.09, 5.57, 9.72, 14.34, 18.445, 23.23, 28.16, 32.82, 37.55, 41.73, 45.11, 48.55, 51.86, 55.843, 60.89, 65.66, 68.57, 70.87, 73.95, 76.95, 79.65, 83.83, 86.13, 88.55, 92.71, 96.5, 101.76, 106.5, 109.52, 112.46, 117.4, 121.44, 125.25, 128.3, 131.89, 137.97, 140.14, 144.22, 148.24, 153.3, 158.39, 161.5, 163.545, 167.42, 169.9, 170.834, 173.95, 177.94, 180.39, 182.88, 186.76, 189.75, 193.07, 196.16, 199.19, 200.87, 204.4, 206.55, 208.63, 213.92, 215.81, 217.759, 222.09, 225.89, 227.57, 228.71, 230.05, 231.161, 233.13, 234.15, 236.57, 238.44, 240.92, 244.68, 247.79, 249.44, 253.71, 256.57, 258.85, 261.32, 264.81, 269.13, 272.99, 276.79, 279.88, 284.51, 288.26, 290.93, 293.85, 298.8, 302.7, 307.32, 311.95, 317.29, 321.77, 324.99, 326.73, 331.33, 336.66, 343.17, 347.93, 352.2, 356, 358.34, 362.86, 366.76, 370.94, 373.18, 375.85, 379.32, 381.88, 384.78, 389.82, 394.01, 397.17, 398.79, 402.48, 405.41, 407.22, 409.23, 413.04, 417.55, 421.37, 424.17, 427.45, 430.4, 433.24, 435.83, 439.77, 441.59, 443.4, 446.74, 449.78, 451.79, 453.23, 455.84, 457.33, 459.62, 462.84, 464.87, 466.43, 469.02, 473.76, 475.37, 477.54, 481.368];
 const IS_FINISHED = !!BAKED_AUDIO && Array.isArray(BAKED_TIMES);
 
 // [ voice, technique, lines, key words ]
@@ -689,7 +702,7 @@ function buildLine(text, beat, wordOffset, seed, lineStart, lineEnd, atTime){
 function render(bi, atTime){
   const beat = B[bi];
   const [who, fx] = beat;
-  plate.className = "plate " + who + " fx-" + fx;
+  plate.className = "plate " + who + " fx-" + fx + (COVERED[bi] !== undefined ? " struck" : "");
   plate.innerHTML = "";
   const first = BEAT_FIRST[bi];
   let off = 0;
@@ -1602,12 +1615,20 @@ const SD_SOUND = {};
   });
 })();
 
+/* Beats where a kept take clips its own last word, and a struck knock covers it.
+   Keyed off the line itself rather than an index, so reordering the script cannot
+   silently point this at the wrong beat. */
+const COVERED = {};
+B.forEach(function(b, i){ if (b[2][0] === "Whence is that knocking?") COVERED[i] = 0.5; });
+
 function fireCue(bi){
   const cue = SD_SOUND[bi];
-  if (!sfxOn || !cue) return;
+  const cover = COVERED[bi];
+  if (!sfxOn || (!cue && cover === undefined)) return;
   try {
     const c = audioCtx();
     const t = c.currentTime + 0.02;
+    if (!cue){ makeKnock(c, master, t + cover, 0.17, 1); return; }
     if (cue.kind === "bell") makeBell(c, master, t, 0.15);
     else makeKnock(c, master, t, 0.15 + cue.step * 0.035, cue.step);
   } catch(e){}

@@ -3,7 +3,7 @@
 Macbeth, Act II scenes i-ii, as a kinetic typography short film.
 The dagger soliloquy through the murder of Duncan, cut to a spoken performance.
 
-Runs 7:55. Open the site and press Play.
+Runs 8:03. Open the site and press Play.
 
 **Watch:** https://aggressiondmp.github.io/macbeth-dagger/
 

@@ -24,7 +24,7 @@
     overflow:hidden;
   }
 
-  .frame{position:relative;height:100vh;overflow:hidden}
+  .frame{transition:opacity 2.1s ease;position:relative;height:100vh;overflow:hidden}
   /* the lit room. painted rather than a static gradient, because a candle
      moves and a flat wash reads as a black panel */
   .atmos{position:absolute;inset:0;z-index:0;display:block}
@@ -101,6 +101,7 @@
 
   /* SETTLE - his composed voice. words are uncovered in reading order */
   .fx-settle .wd{animation:wipe .68s cubic-bezier(.16,.84,.32,1) both;animation-delay:calc(var(--w)*105ms)}
+  .frame.out{opacity:0}
   @keyframes wipe{0%{clip-path:inset(-.28em 100% -.36em 0);opacity:0}62%{opacity:1}100%{clip-path:inset(-.28em -.15em -.36em 0);opacity:1}}
   @keyframes unwipe{from{clip-path:inset(-.28em -.15em -.36em 0)}to{clip-path:inset(-.28em -.15em -.36em 100%)}}
 
@@ -367,12 +368,6 @@
     <p class="n">Coby O'Connor</p>
   </div>
 
-  <div class="card" id="endCard" hidden>
-    <p class="s">End of Act II, scene ii</p>
-    <h1 class="t">The Dagger<br>and the Deed</h1>
-    <div class="rule"></div>
-    <p class="n">Coby O'Connor</p>
-  </div>
 </div>
 
 <audio id="audio" preload="auto"></audio>
@@ -507,7 +502,7 @@ const B = [
   ["her","lock",["Be not lost","So poorly in your thoughts."]],
   ["him","erase",["To know my deed, 'twere best not know myself."],["myself."]],
   ["sd","strike",["Knocking within"]],
-  ["him","knell",["Wake Duncan with thy knocking!","I would thou couldst!"],["couldst!"]]
+  ["him","settle",["Wake Duncan with thy knocking!","I would thou couldst!"]]
 ];
 
 /* ================= timing model =================
@@ -599,7 +594,6 @@ const tapNote = document.getElementById("tapNote");
 const tapMode = document.getElementById("tapMode");
 const statusEl = document.getElementById("status");
 const titleCard = document.getElementById("titleCard");
-const endCard = document.getElementById("endCard");
 
 function clock(sec){
   const s = Math.max(0, Math.round(sec));
@@ -805,7 +799,8 @@ function tick(ts){
 function play(){
   if (position() >= TOTAL()){ if (hasAudio) audio.currentTime = 0; else clockPos = 0; }
   titleCard.hidden = true;
-  endCard.hidden = true;
+  frame.classList.remove("out");
+  clearTimeout(fadeTimer);
   playing = true;
   lastTs = 0;
   plate.classList.remove("held");
@@ -827,15 +822,18 @@ function pause(){
   showUI(true);
 }
 
+let fadeTimer = null;
 function finish(){
   playing = false;
   cancelAnimationFrame(raf);
   if (hasAudio) audio.pause();
   stopTone();
-  plate.className = "plate";
-  plate.innerHTML = "";
   current = -1;
-  endCard.hidden = false;
+  /* The last line is left where it is and the whole frame goes to black - candle,
+     vignette and all. No card, and nothing to read after the last thing he says. */
+  frame.classList.add("out");
+  clearTimeout(fadeTimer);
+  fadeTimer = setTimeout(() => { plate.className = "plate"; plate.innerHTML = ""; }, 2400);
   playBtn.textContent = "Replay";
   paintBar();
   showUI(true);
@@ -843,8 +841,9 @@ function finish(){
 
 function seekTo(sec){
   const t = Math.max(0, Math.min(TOTAL() - .01, sec));
+  frame.classList.remove("out");
+  clearTimeout(fadeTimer);
   titleCard.hidden = true;
-  endCard.hidden = true;
   if (hasAudio) audio.currentTime = t; else clockPos = t;
   lastTs = 0;
   current = -1;
@@ -1094,7 +1093,6 @@ async function applyTake(src, times, label, blob, mime, opts){
   drawTicks();
   seekTo(0);
   titleCard.hidden = false;
-  endCard.hidden = true;
   refreshStatus(label);
   refreshSave();
 }
@@ -1665,7 +1663,7 @@ document.addEventListener("mousemove", () => showUI(false));
 let resizeTimer = null;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => { if (current >= 0 && titleCard.hidden && endCard.hidden) sync(true); }, 120);
+  resizeTimer = setTimeout(() => { if (current >= 0 && titleCard.hidden) sync(true); }, 120);
 });
 
 audio.addEventListener("ended", finish);

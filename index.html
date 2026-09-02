@@ -1615,20 +1615,19 @@ const SD_SOUND = {};
   });
 })();
 
-/* Beats where a kept take clips its own last word, and a struck knock covers it.
-   Keyed off the line itself rather than an index, so reordering the script cannot
-   silently point this at the wrong beat. */
+/* Beats where the line reacts to what it names. "Whence is that knocking?" gets a
+   shudder half a second in, on the word itself. No extra knock sound - the stage
+   direction immediately before it already fires one. Keyed off the line rather
+   than an index, so reordering the script cannot point it at the wrong beat. */
 const COVERED = {};
 B.forEach(function(b, i){ if (b[2][0] === "Whence is that knocking?") COVERED[i] = 0.5; });
 
 function fireCue(bi){
   const cue = SD_SOUND[bi];
-  const cover = COVERED[bi];
-  if (!sfxOn || (!cue && cover === undefined)) return;
+  if (!sfxOn || !cue) return;
   try {
     const c = audioCtx();
     const t = c.currentTime + 0.02;
-    if (!cue){ makeKnock(c, master, t + cover, 0.17, 1); return; }
     if (cue.kind === "bell") makeBell(c, master, t, 0.15);
     else makeKnock(c, master, t, 0.15 + cue.step * 0.035, cue.step);
   } catch(e){}

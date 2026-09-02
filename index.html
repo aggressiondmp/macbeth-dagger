@@ -119,7 +119,10 @@
   .fx-ghost .line{animation:fade .6s ease both}
   .ghost{
     position:absolute;left:0;right:0;top:0;margin:0;
-    color:var(--steel);opacity:0;pointer-events:none;
+    /* the double takes the speaker's own colour. hardcoding steel here put Lady
+       Macbeth's blue on Macbeth's lines - every ghost beat is his - which broke
+       the one rule doing all the character labelling */
+    color:var(--voice);opacity:0;pointer-events:none;
     animation:drift 3.4s ease-out both;
   }
   @keyframes drift{0%{transform:none;opacity:0}20%{opacity:.44}100%{transform:translate(.36em,-.12em);opacity:.16}}
@@ -642,7 +645,36 @@ function buildLine(text, beat, wordOffset, seed, lineStart, lineEnd, atTime){
     // it is spoken, instead of only starting to appear on it
     const LEAD = .34;
     const wordAt = lineStart + (wi / words.length) * span - LEAD;
-    w.style.animationDelay = (wordAt - atTime).toFixed(3) + "s";
+    const d = (wordAt - atTime).toFixed(3);
+    const fx = beat[1], isKey = keys.includes(word);
+
+    /* Three CSS rules give a word a SECOND animation meant to run late: the erase
+       dissolving its key words, and both halves of the knell, where the line falls
+       away and the last word is left ringing. Their delays live in the animation
+       shorthand, but ONE inline animation-delay value applies to EVERY animation
+       in that shorthand - so setting it here started the late one at the same
+       instant as the wipe-in. The erased words were gone before they could be
+       read, and the knell lines never appeared at all beyond their key word,
+       which is why "Hear it not, Duncan" and the closing "Wake Duncan with thy
+       knocking!" looked blank.
+
+       Those words therefore get one delay per animation, timed off this line's
+       own hold rather than a fixed number of seconds - holds run from about 2s to
+       5.3s and no single delay suits that range. The late animation runs at the
+       very END of the hold: taking the words out earlier left the line sitting
+       visibly incomplete for its last second or two, which reads as broken text
+       rather than as an effect. At 80% the whole line is readable for the time it
+       is up, and the words leave as the line leaves. */
+    const late = (fx === "erase" && isKey) || fx === "knell"
+      ? [gap * .80, gap * .22]                         // [start after line, duration]
+      : null;
+    if (late){
+      const firstFor = fx === "knell" ? ".66s" : ".62s";
+      w.style.animationDelay = d + "s, " + (lineStart + late[0] - atTime).toFixed(3) + "s";
+      w.style.animationDuration = firstFor + ", " + late[1].toFixed(2) + "s";
+    } else {
+      w.style.animationDelay = d + "s";
+    }
     [...word].forEach(c => {
       const s = document.createElement("span");
       s.className = "ch";
